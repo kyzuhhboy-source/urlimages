@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📸 Upload Foto → Link GitHub</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:radial-gradient(circle at 20% 0%,#232a55,#0f1220 45%,#07080f);
+    color:#e8ebff;min-height:100vh;padding:20px 14px;
+    display:flex;justify-content:center;
+  }
+  .app{
+    width:100%;max-width:560px;background:rgba(25,29,51,.92);
+    border:1px solid #2e3559;border-radius:20px;padding:22px;
+    box-shadow:0 30px 70px rgba(0,0,0,.55);
+  }
+  h1{
+    font-size:1.25rem;font-weight:800;text-align:center;
+    background:linear-gradient(90deg,#00d2ff,#6c5ce7);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:#8b93b8;font-size:.78rem;margin:6px 0 18px;text-align:center}
+
+  .field{margin-bottom:12px}
+  .field label{
+    display:block;font-size:.7rem;text-transform:uppercase;
+    letter-spacing:.5px;color:#8b93b8;margin-bottom:5px;font-weight:600;
+  }
+  input,select{
+    width:100%;background:#212745;color:#e8ebff;border:1px solid #2e3559;
+    border-radius:10px;padding:11px 12px;font-size:.85rem;outline:none;
+    font-family:inherit;
+  }
+  input:focus,select:focus{border-color:#00d2ff}
+
+  .dropzone{
+    display:block;border:2px dashed #2e3559;border-radius:14px;
+    padding:26px 16px;text-align:center;cursor:pointer;
+    background:rgba(33,39,69,.4);transition:.25s;margin:14px 0;
+  }
+  .dropzone:hover{border-color:#00d2ff;background:rgba(0,210,255,.07)}
+  .dropzone .icon{font-size:2rem;display:block;margin-bottom:6px}
+  .dropzone strong{display:block;font-size:.9rem;margin-bottom:3px}
+  .dropzone small{color:#8b93b8;font-size:.72rem}
+
+  .status{
+    display:none;margin-top:12px;padding:10px 12px;border-radius:10px;
+    font-size:.78rem;border:1px solid #2e3559;background:#12162a;color:#a9b4e8;
+    word-break:break-word;
+  }
+  .status.show{display:block}
+  .status.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#86efac}
+  .status.err{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#fca5a5}
+  .status.info{background:rgba(0,210,255,.1);border-color:rgba(0,210,255,.3);color:#7dd3fc}
+
+  .progress{display:none;height:6px;background:#12162a;border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid #2e3559}
+  .progress.show{display:block}
+  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,#6c5ce7,#00d2ff);transition:width .2s}
+
+  .preview-wrap{display:none;margin-top:12px;border-radius:12px;overflow:hidden;border:1px solid #2e3559}
+  .preview-wrap.show{display:block}
+  .preview-wrap img{width:100%;max-height:280px;object-fit:contain;display:block;background:#0d1020}
+
+  .result{display:none;margin-top:16px}
+  .result.show{display:block}
+  .result h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#8b93b8;margin-bottom:8px}
+  .link-box{
+    background:#0d1020;border:1px solid #2e3559;border-radius:10px;
+    padding:10px 12px;font-family:Consolas,monospace;font-size:.72rem;
+    color:#7dd3fc;word-break:break-all;line-height:1.5;user-select:all;
+  }
+
+  .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  button{
+    flex:1;min-width:100px;padding:11px;border:none;border-radius:10px;
+    font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;
+    transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  }
+  button:active{transform:scale(.97)}
+  .btn-primary{background:linear-gradient(135deg,#6c5ce7,#00d2ff);color:#fff}
+  .btn-ghost{background:#212745;color:#e8ebff;border:1px solid #2e3559}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translate(-50%,90px);
+    background:#22c55e;color:#052e16;padding:11px 20px;border-radius:999px;
+    font-weight:700;font-size:.82rem;opacity:0;
+    transition:.35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:99;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1}
+
+  details{margin-top:16px;background:#12162a;border:1px solid #2e3559;border-radius:10px;padding:12px}
+  summary{cursor:pointer;font-size:.78rem;color:#8b93b8;font-weight:600}
+  details p{font-size:.72rem;color:#8b93b8;margin-top:8px;line-height:1.6}
+  details code{background:#212745;padding:1px 5px;border-radius:4px;color:#00d2ff;font-size:.7rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📸 Upload Foto → Link GitHub</h1>
+  <p class="sub">Foto disimpan di repo GitHub kamu, dapat URL publik</p>
+
+  <div class="field">
+    <label>GitHub Username</label>
+    <input id="username" placeholder="contoh: budi123" autocomplete="off">
+  </div>
+
+  <div class="field">
+    <label>Nama Repo</label>
+    <input id="repo" placeholder="contoh: foto-storage" autocomplete="off">
+  </div>
+
+  <div class="field">
+    <label>Personal Access Token (ghp_...)</label>
+    <input id="token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off">
+  </div>
+
+  <label class="dropzone" for="fileInput">
+    <span class="icon">🖼️</span>
+    <strong>Klik / tarik foto ke sini</strong>
+    <small>JPG · PNG · WEBP · GIF — maks 5 MB</small>
+  </label>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+
+  <div class="status" id="status"></div>
+  <div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <img id="previewImg" alt="">
+  </div>
+
+  <div class="result" id="result">
+    <h3>🔗 Link Foto</h3>
+    <div class="link-box" id="linkBox">—</div>
+    <div class="btns">
+      <button class="btn-primary" id="btnCopy" type="button">📋 Salin</button>
+      <button class="btn-ghost" id="btnOpen" type="button">↗️ Buka</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>❓ Belum punya token?</summary>
+    <p>
+      1. Buka <code>github.com/settings/tokens</code><br>
+      2. Klik <b>Generate new token (classic)</b><br>
+      3. Centang scope <code>repo</code><br>
+      4. Generate & copy token (mulai <code>ghp_</code>)<br>
+      ⚠️ Token hanya muncul sekali, simpan baik-baik.<br>
+      ⚠️ Data disimpan di browser HP kamu, tidak dikirim ke mana pun.
+    </p>
+  </details>
+</div>
+
+<div class="toast" id="toast">✅</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fileInput = $('fileInput');
+  const statusEl  = $('status');
+  const progress  = $('progress');
+  const progressBar = $('progressBar');
+  const previewWrap = $('previewWrap');
+  const previewImg  = $('previewImg');
+  const result    = $('result');
+  const linkBox   = $('linkBox');
+  const toast     = $('toast');
+
+  let currentUrl = '';
+
+  // Simpan kredensial di localStorage
+  const saved = JSON.parse(localStorage.getItem('gh_foto_creds') || '{}');
+  if (saved.username) $('username').value = saved.username;
+  if (saved.repo)     $('repo').value = saved.repo;
+  if (saved.token)    $('token').value = saved.token;
+
+  function saveCreds() {
+    localStorage.setItem('gh_foto_creds', JSON.stringify({
+      username: $('username').value.trim(),
+      repo    : $('repo').value.trim(),
+      token   : $('token').value.trim()
+    }));
+  }
+  ['username','repo','token'].forEach(id =>
+    $(id).addEventListener('input', saveCreds));
+
+  function setStatus(msg, type = 'info') {
+    statusEl.textContent = msg;
+    statusEl.className = 'status show ' + type;
+  }
+  function showToast(msg, color = '#22c55e') {
+    toast.textContent = msg;
+    toast.style.background = color;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  fileInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) upload(f);
+    fileInput.value = '';
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function upload(file) {
+    const username = $('username').value.trim();
+    const repo     = $('repo').value.trim();
+    const token    = $('token').value.trim();
+
+    if (!username || !repo || !token) {
+      setStatus('❌ Isi username, repo, dan token dulu.', 'err');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setStatus('❌ File bukan gambar.', 'err');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setStatus('❌ Maks 5 MB (batas GitHub API).', 'err');
+      return;
+    }
+
+    // Preview lokal
+    previewImg.src = URL.createObjectURL(file);
+    previewWrap.classList.add('show');
+    result.classList.remove('show');
+    progress.classList.add('show');
+    progressBar.style.width = '30%';
+    setStatus('⏳ Mengunggah ke GitHub...', 'info');
+
+    try {
+      const base64 = await fileToBase64(file);
+      progressBar.style.width = '60%';
+
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).slice(2, 8);
+      const path = `foto/${timestamp}-${random}.${ext}`;
+
+      const res = await fetch(
+        `https://api.github.com/repos/${username}/${repo}/contents/${path}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept'       : 'application/vnd.github+json',
+            'Content-Type' : 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Upload foto ${timestamp}`,
+            content: base64
+          })
+        }
+      );
+
+      progressBar.style.width = '90%';
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Gagal upload ke GitHub');
+      }
+
+      // Link raw (langsung tampil gambarnya)
+      const rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/${path}`;
+      // Alternatif CDN lebih cepat
+      const cdnUrl = `https://cdn.jsdelivr.net/gh/${username}/${repo}@main/${path}`;
+
+      currentUrl = rawUrl;
+      linkBox.innerHTML =
+        `<b>Raw:</b><br>${rawUrl}<br><br>` +
+        `<b>CDN (lebih cepat):</b><br>${cdnUrl}`;
+
+      result.classList.add('show');
+      progressBar.style.width = '100%';
+      setTimeout(() => progress.classList.remove('show'), 500);
+      setStatus('✅ Berhasil diunggah ke GitHub!', 'ok');
+      showToast('✅ Upload sukses!');
+
+    } catch (err) {
+      progress.classList.remove('show');
+      setStatus('❌ ' + err.message, 'err');
+      showToast('❌ Gagal', '#ef4444');
+      console.error(err);
+    }
+  }
+
+  $('btnCopy').addEventListener('click', async () => {
+    if (!currentUrl) return;
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      showToast('✅ Link disalin!');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = currentUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✅ Link disalin!');
+    }
+  });
+
+  $('btnOpen').addEventListener('click', () => {
+    if (currentUrl) window.open(currentUrl, '_blank');
+  });
+
+  setStatus('💡 Isi kredensial GitHub di atas, lalu pilih foto.', 'info');
+})();
+</script>
+</body>
+</html>
