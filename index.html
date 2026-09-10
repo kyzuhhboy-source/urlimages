@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>kyzu image uploade</title>
+<title>kyzu images to url</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{
@@ -29,12 +29,12 @@
     display:block;font-size:.7rem;text-transform:uppercase;
     letter-spacing:.5px;color:#8b93b8;margin-bottom:5px;font-weight:600;
   }
-  input,select{
+  input{
     width:100%;background:#212745;color:#e8ebff;border:1px solid #2e3559;
     border-radius:10px;padding:11px 12px;font-size:.85rem;outline:none;
     font-family:inherit;
   }
-  input:focus,select:focus{border-color:#00d2ff}
+  input:focus{border-color:#00d2ff}
 
   .dropzone{
     display:block;border:2px dashed #2e3559;border-radius:14px;
@@ -69,7 +69,7 @@
   .result h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#8b93b8;margin-bottom:8px}
   .link-box{
     background:#0d1020;border:1px solid #2e3559;border-radius:10px;
-    padding:10px 12px;font-family:Consolas,monospace;font-size:.72rem;
+    padding:10px 12px;font-family:Consolas,monospace;font-size:.75rem;
     color:#7dd3fc;word-break:break-all;line-height:1.5;user-select:all;
   }
 
@@ -99,8 +99,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>IMAGES UPLOADER</h1>
-  <p class="sub">Foto disimpan di repo GitHub kamu, dapat URL publik</p>
+  <h1>images to url</h1>
+  <p class="sub">Foto disimpan di GitHub, dapat link CDN cepat</p>
 
   <div class="field">
     <label>GitHub Username</label>
@@ -132,7 +132,7 @@
   </div>
 
   <div class="result" id="result">
-    <h3>🔗 Link Foto</h3>
+    <h3>🔗 Link Foto (CDN)</h3>
     <div class="link-box" id="linkBox">—</div>
     <div class="btns">
       <button class="btn-primary" id="btnCopy" type="button">📋 Salin</button>
@@ -146,7 +146,7 @@
       1. Buka <code>github.com/settings/tokens</code><br>
       2. Klik <b>Generate new token (classic)</b><br>
       3. Centang scope <code>repo</code><br>
-      4. Generate & copy token (mulai <code>ghp_</code>)<br>
+      4. Generate &amp; copy token (mulai <code>ghp_</code>)<br>
       ⚠️ Token hanya muncul sekali, simpan baik-baik.<br>
       ⚠️ Data disimpan di browser HP kamu, tidak dikirim ke mana pun.
     </p>
@@ -231,7 +231,6 @@
       return;
     }
 
-    // Preview lokal
     previewImg.src = URL.createObjectURL(file);
     previewWrap.classList.add('show');
     result.classList.remove('show');
@@ -271,20 +270,16 @@
         throw new Error(data.message || 'Gagal upload ke GitHub');
       }
 
-      // Link raw (langsung tampil gambarnya)
-      const rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/${path}`;
-      // Alternatif CDN lebih cepat
-      const cdnUrl = `https://cdn.jsdelivr.net/gh/${username}/${repo}@main/${path}`;
+      // === CUMA LINK CDN ===
+      const cdnUrl = `https://cdn.jsdelivr.net/gh/${username}/${repo}.com/${path}`;
 
-      currentUrl = rawUrl;
-      linkBox.innerHTML =
-        `<b>Raw:</b><br>${rawUrl}<br><br>` +
-        `<b>CDN (lebih cepat):</b><br>${cdnUrl}`;
+      currentUrl = cdnUrl;
+      linkBox.innerHTML = cdnUrl;
 
       result.classList.add('show');
       progressBar.style.width = '100%';
       setTimeout(() => progress.classList.remove('show'), 500);
-      setStatus('✅ Berhasil diunggah ke GitHub!', 'ok');
+      setStatus('✅ Berhasil diunggah!', 'ok');
       showToast('✅ Upload sukses!');
 
     } catch (err) {
