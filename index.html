@@ -41,7 +41,7 @@
     padding:26px 16px;text-align:center;cursor:pointer;
     background:rgba(33,39,69,.4);transition:.25s;margin:14px 0;
   }
-  .dropzone:hover{border-color:#00d2ff;background:rgba(0,210,255,.07)}
+  .dropzone:hover, .dropzone.dragover{border-color:#00d2ff;background:rgba(0,210,255,.12)}
   .dropzone .icon{font-size:2rem;display:block;margin-bottom:6px}
   .dropzone strong{display:block;font-size:.9rem;margin-bottom:3px}
   .dropzone small{color:#8b93b8;font-size:.72rem}
@@ -117,7 +117,7 @@
     <input id="token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off">
   </div>
 
-  <label class="dropzone" for="fileInput">
+  <label class="dropzone" id="dropzone" for="fileInput">
     <span class="icon">🖼️</span>
     <strong>Klik / tarik foto ke sini</strong>
     <small>JPG · PNG · WEBP · GIF — maks 5 MB</small>
@@ -159,6 +159,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const fileInput = $('fileInput');
+  const dropzone  = $('dropzone');
   const statusEl  = $('status');
   const progress  = $('progress');
   const progressBar = $('progressBar');
@@ -202,6 +203,31 @@
     const f = e.target.files[0];
     if (f) upload(f);
     fileInput.value = '';
+  });
+
+  // === FITUR DRAG AND DROP ===
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    }, false);
+  });
+
+  dropzone.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    const f = dt.files[0];
+    if (f) {
+      upload(f);
+    }
   });
 
   function fileToBase64(file) {
@@ -310,7 +336,7 @@
     if (currentUrl) window.open(currentUrl, '_blank');
   });
 
-  setStatus('💡 Isi kredensial GitHub di atas, lalu pilih foto.', 'info');
+  setStatus('💡 Isi kredensial GitHub di atas, lalu pilih atau seret foto.', 'info');
 })();
 </script>
 </body>
